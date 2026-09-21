@@ -1,17 +1,15 @@
 import os
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from cce.audit import register_audit_listeners
-from cce.models import Base
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://cce_user:cce_password@localhost:5432/cce_db"
+    "DATABASE_URL", "postgresql+psycopg://cce_user:cce_password@localhost:5432/cce_db"
 )
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -23,14 +21,14 @@ TRIGGERS_SQL_PATH = PROJECT_ROOT / "cce" / "ddl" / "triggers.sql"
 def engine():
     """Session-wide PostgreSQL SQLAlchemy engine."""
     eng = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
-    
+
     # Apply Schema and Triggers
     with eng.connect() as conn:
-        with open(SCHEMA_SQL_PATH, "r", encoding="utf-8") as f:
+        with open(SCHEMA_SQL_PATH, encoding="utf-8") as f:
             schema_sql = f.read()
             conn.execute(text(schema_sql))
 
-        with open(TRIGGERS_SQL_PATH, "r", encoding="utf-8") as f:
+        with open(TRIGGERS_SQL_PATH, encoding="utf-8") as f:
             triggers_sql = f.read()
             conn.execute(text(triggers_sql))
 
@@ -61,7 +59,9 @@ def db_session(engine) -> Generator[Session, None, None]:
     # Clean tables between test runs using TRUNCATE
     with engine.connect() as conn:
         conn.execute(
-            text("TRUNCATE TABLE ambiguous_review_items, obligation_audit_log, obligations RESTART IDENTITY CASCADE;")
+            text(
+                "TRUNCATE TABLE ambiguous_review_items, obligation_audit_log, obligations RESTART IDENTITY CASCADE;"
+            )
         )
         conn.commit()
 
@@ -72,4 +72,3 @@ def raw_conn(engine):
     connection = engine.raw_connection()
     yield connection
     connection.close()
-

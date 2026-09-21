@@ -1,0 +1,146 @@
+{
+  "cce/__init__.py": {
+    "mtime": 1789992274.7373798,
+    "seen": 1789994601.9278722,
+    "ast_hash": "ebc63f7f6ef93b824ab695fe5728835e",
+    "semantic_hash": "ebc63f7f6ef93b824ab695fe5728835e"
+  },
+  "cce/audit.py": {
+    "mtime": 1789992044.598995,
+    "seen": 1789994601.927887,
+    "ast_hash": "7de28ce81446c7cb6bacf7a99b914404",
+    "semantic_hash": "7de28ce81446c7cb6bacf7a99b914404"
+  },
+  "cce/ddl/schema.sql": {
+    "mtime": 1789991625.4581647,
+    "seen": 1789994601.9278908,
+    "ast_hash": "6b1cd1f61731d7c73729b3a3cab85e2b",
+    "semantic_hash": "6b1cd1f61731d7c73729b3a3cab85e2b"
+  },
+  "cce/ddl/triggers.sql": {
+    "mtime": 1789991625.4581647,
+    "seen": 1789994601.9278927,
+    "ast_hash": "617fbe3d854d6b4752eb4542636a32ba",
+    "semantic_hash": "617fbe3d854d6b4752eb4542636a32ba"
+  },
+  "cce/enums.py": {
+    "mtime": 1789991879.8498683,
+    "seen": 1789994601.9278944,
+    "ast_hash": "8d4eff628dcf49a41f48ca0ec2141b5b",
+    "semantic_hash": "8d4eff628dcf49a41f48ca0ec2141b5b"
+  },
+  "cce/models.py": {
+    "mtime": 1789992044.610315,
+    "seen": 1789994601.9278955,
+    "ast_hash": "c2ce7380b6fd6ee8ca69024faa79e35a",
+    "semantic_hash": "c2ce7380b6fd6ee8ca69024faa79e35a"
+  },
+  "cce/service.py": {
+    "mtime": 1789992044.610315,
+    "seen": 1789994601.9278975,
+    "ast_hash": "8da92a92d98cd585a0f3af7a1c554250",
+    "semantic_hash": "8da92a92d98cd585a0f3af7a1c554250"
+  },
+  "migrations/env.py": {
+    "mtime": 1789991625.4668152,
+    "seen": 1789994601.9278984,
+    "ast_hash": "46777d604745a4f6a162d8aaa77a0210",
+    "semantic_hash": "46777d604745a4f6a162d8aaa77a0210"
+  },
+  "migrations/versions/0001_initial_cce_schema.py": {
+    "mtime": 1789991634.1792927,
+    "seen": 1789994601.9278994,
+    "ast_hash": "6cb39d47825db992aa4c5717ce62ed58",
+    "semantic_hash": "6cb39d47825db992aa4c5717ce62ed58"
+  },
+  "pyproject.toml": {
+    "mtime": 1789992274.7373798,
+    "seen": 1789994601.9279008,
+    "ast_hash": "3c7f70dac4462476bec2ec1d0169eef3",
+    "semantic_hash": "3c7f70dac4462476bec2ec1d0169eef3"
+  },
+  "scripts/check.sh": {
+    "mtime": 1789992044.6736543,
+    "seen": 1789994601.927902,
+    "ast_hash": "75c0e0dd0f9ba8f9441386240abf408b",
+    "semantic_hash": "75c0e0dd0f9ba8f9441386240abf408b"
+  },
+  "tests/conftest.py": {
+    "mtime": 1789992335.7450132,
+    "seen": 1789994601.9279037,
+    "ast_hash": "c08fb31d3a3f1300c8889c77e833d2fb",
+    "semantic_hash": "c08fb31d3a3f1300c8889c77e833d2fb"
+  },
+  "tests/test_audit_enforcement.py": {
+    "mtime": 1789992334.5823987,
+    "seen": 1789994601.927905,
+    "ast_hash": "431ac4ccc9be0088613469ab717d8c04",
+    "semantic_hash": "431ac4ccc9be0088613469ab717d8c04"
+  },
+  "tests/test_models.py": {
+    "mtime": 1789992333.4974496,
+    "seen": 1789994601.927906,
+    "ast_hash": "a0b4a92f2a11096d2573a3985f987a9c",
+    "semantic_hash": "a0b4a92f2a11096d2573a3985f987a9c"
+  },
+  "tests/test_raw_sql.py": {
+    "mtime": 1789991879.8498683,
+    "seen": 1789994601.9279072,
+    "ast_hash": "56c622b3ae91e8c7c28e76629339b426",
+    "semantic_hash": "56c622b3ae91e8c7c28e76629339b426"
+  },
+  "tests/test_service_operations.py": {
+    "mtime": 1789992220.733613,
+    "seen": 1789994601.9279084,
+    "ast_hash": "83265a04195d6cd1ad883a7142373882",
+    "semantic_hash": "83265a04195d6cd1ad883a7142373882"
+  },
+  "tests/test_supersession.py": {
+    "mtime": 1789992044.6736543,
+    "seen": 1789994601.9279099,
+    "ast_hash": "8d2681ff959ca6da91f4c8c1ade2ad43",
+    "semantic_hash": "8d2681ff959ca6da91f4c8c1ade2ad43"
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1789994188.956179,
+    "seen": 1789994601.9279108,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": "f1e53ecc9194573d3c28fc116c743a2e"
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1789994188.956308,
+    "seen": 1789994601.927913,
+    "ast_hash": "6d73634a678cf1e1c71930adf80bd1f0",
+    "semantic_hash": "6d73634a678cf1e1c71930adf80bd1f0"
+  },
+  ".github/copilot-instructions.md": {
+    "mtime": 1789994471.0014977,
+    "seen": 1789994601.9279144,
+    "ast_hash": "ec2dc0dc7bef63488889f34de2f5584d",
+    "semantic_hash": "ec2dc0dc7bef63488889f34de2f5584d"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1789992211.4459918,
+    "seen": 1789994601.927916,
+    "ast_hash": "cef430c42c47beb4f1712b16844b1a1c",
+    "semantic_hash": "cef430c42c47beb4f1712b16844b1a1c"
+  },
+  ".pre-commit-config.yaml": {
+    "mtime": 1789992044.6736543,
+    "seen": 1789994601.9279182,
+    "ast_hash": "7150bd9dcea953e9888c16cd4949499c",
+    "semantic_hash": "7150bd9dcea953e9888c16cd4949499c"
+  },
+  "README.md": {
+    "mtime": 1789992274.7373798,
+    "seen": 1789994601.9279203,
+    "ast_hash": "40184800a263ae6a54e2bdec888ed5e9",
+    "semantic_hash": "40184800a263ae6a54e2bdec888ed5e9"
+  },
+  "docker-compose.yml": {
+    "mtime": 1789991625.4317484,
+    "seen": 1789994601.9279222,
+    "ast_hash": "05f6e476d53c45ec4d6cb5d0274d82d7",
+    "semantic_hash": "05f6e476d53c45ec4d6cb5d0274d82d7"
+  }
+}

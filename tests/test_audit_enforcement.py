@@ -1,25 +1,18 @@
-from datetime import datetime, timezone
-import uuid
+from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import select, text
-from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from cce.audit import AuditMissingError, ImmutabilityViolationError
 from cce.enums import (
-    AuditEventType,
-    EvidenceReviewStatus,
     LifecycleStatus,
-    OwnershipStatus,
-    TimelinessStatus,
 )
-from cce.models import Obligation, ObligationAuditLog
+from cce.models import Obligation
 from cce.service import ObligationService
 
 
 def test_insert_obligation_without_audit_log_fails_in_orm(db_session):
     """Verify ORM before_flush rejects inserting an Obligation without a creation audit log."""
-    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
     ob = Obligation(
         patient_id="PAT-NO-AUDIT",
         source_evidence={"doc": "Discharge Summary"},
@@ -58,12 +51,14 @@ def test_insert_obligation_without_audit_log_fails_in_raw_sql(raw_conn):
         cursor.execute("COMMIT;")
 
     raw_conn.rollback()
-    assert "trg_enforce_audit_on_mutation" in str(excinfo.value) or "Audit violation" in str(excinfo.value)
+    assert "trg_enforce_audit_on_mutation" in str(excinfo.value) or "Audit violation" in str(
+        excinfo.value
+    )
 
 
 def test_update_obligation_without_audit_log_fails_in_orm(db_session):
     """Verify ORM before_flush rejects updating an Obligation without a staged audit log."""
-    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
 
     # 1. Create obligation safely
     ob = ObligationService.create_obligation(
@@ -122,7 +117,9 @@ def test_update_obligation_without_audit_log_fails_in_raw_sql(raw_conn):
         cursor.execute("COMMIT;")
 
     raw_conn.rollback()
-    assert "trg_enforce_audit_on_mutation" in str(excinfo.value) or "Audit violation" in str(excinfo.value)
+    assert "trg_enforce_audit_on_mutation" in str(excinfo.value) or "Audit violation" in str(
+        excinfo.value
+    )
 
 
 def test_multiple_updates_in_single_transaction_require_individual_audits(raw_conn):
@@ -180,7 +177,9 @@ def test_multiple_updates_in_single_transaction_require_individual_audits(raw_co
     with pytest.raises(Exception) as excinfo:
         cursor.execute("COMMIT;")
     raw_conn.rollback()
-    assert "audit_seq 3" in str(excinfo.value) or "trg_enforce_audit_on_mutation" in str(excinfo.value)
+    assert "audit_seq 3" in str(excinfo.value) or "trg_enforce_audit_on_mutation" in str(
+        excinfo.value
+    )
 
     # Now verify that providing BOTH audits for seq 2 and seq 3 succeeds!
     cursor.execute("BEGIN;")
@@ -213,14 +212,16 @@ def test_multiple_updates_in_single_transaction_require_individual_audits(raw_co
     cursor.execute("COMMIT;")
 
     # Check that audit log has 3 total records (seq 1, 2, 3)
-    cursor.execute("SELECT count(*) FROM obligation_audit_log WHERE obligation_id = 'b0000000-0000-0000-0000-000000000003';")
+    cursor.execute(
+        "SELECT count(*) FROM obligation_audit_log WHERE obligation_id = 'b0000000-0000-0000-0000-000000000003';"
+    )
     count = cursor.fetchone()[0]
     assert count == 3
 
 
 def test_prohibit_hard_deletion_on_obligations(raw_conn, db_session):
     """Verify direct hard DELETE on obligations is strictly blocked by PostgreSQL trigger."""
-    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
     ob = ObligationService.create_obligation(
         session=db_session,
         patient_id="PAT-NO-DELETE",
@@ -243,12 +244,15 @@ def test_prohibit_hard_deletion_on_obligations(raw_conn, db_session):
     with pytest.raises(Exception) as excinfo:
         cursor.execute(f"DELETE FROM obligations WHERE id = '{ob.id}';")
     raw_conn.rollback()
-    assert "Clinical safety violation: Direct deletion of obligations is strictly prohibited" in str(excinfo.value)
+    assert (
+        "Clinical safety violation: Direct deletion of obligations is strictly prohibited"
+        in str(excinfo.value)
+    )
 
 
 def test_prohibit_mutation_or_deletion_on_audit_log(raw_conn, db_session):
     """Verify obligation_audit_log is append-only; updates and deletes are blocked."""
-    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
     ob = ObligationService.create_obligation(
         session=db_session,
         patient_id="PAT-AUDIT-IMMUTABLE",
@@ -263,7 +267,9 @@ def test_prohibit_mutation_or_deletion_on_audit_log(raw_conn, db_session):
     # 1. Test update via raw SQL
     cursor = raw_conn.cursor()
     with pytest.raises(Exception) as excinfo:
-        cursor.execute(f"UPDATE obligation_audit_log SET reason_code = 'ALTERED' WHERE id = '{audit_entry.id}';")
+        cursor.execute(
+            f"UPDATE obligation_audit_log SET reason_code = 'ALTERED' WHERE id = '{audit_entry.id}';"
+        )
     raw_conn.rollback()
     assert "Audit ledger violation: obligation_audit_log is append-only" in str(excinfo.value)
 
@@ -272,4 +278,3 @@ def test_prohibit_mutation_or_deletion_on_audit_log(raw_conn, db_session):
         cursor.execute(f"DELETE FROM obligation_audit_log WHERE id = '{audit_entry.id}';")
     raw_conn.rollback()
     assert "Audit ledger violation: obligation_audit_log is append-only" in str(excinfo.value)
-
