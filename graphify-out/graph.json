@@ -400,7 +400,7 @@
       "file_type": "code",
       "norm_label": "downgrade()",
       "source_file": "migrations/versions/0001_initial_cce_schema.py",
-      "source_location": "L222"
+      "source_location": "L232"
     },
     {
       "id": "migrations_versions_0001_initial_cce_schema_upgrade",
@@ -1786,6 +1786,18 @@
       "type": "external"
     },
     {
+      "id": "collections_abc",
+      "label": "collections_abc",
+      "_origin": "semantic",
+      "community": 3,
+      "community_name": "conftest.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "collections_abc",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "logging_config",
       "label": "logging_config",
       "_origin": "semantic",
@@ -1926,17 +1938,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "uuid",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "collections_abc",
-      "label": "collections_abc",
-      "community": 3,
-      "community_name": "conftest.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "collections_abc",
       "source_file": "",
       "type": "external"
     }
@@ -4436,7 +4437,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "migrations/versions/0001_initial_cce_schema.py",
-      "source_location": "L222",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -6379,5 +6380,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1828559b1100f8a4c548aa5290eb501226455018"
+  "built_at_commit": "9275679c8f98b69421609de3012f37943d64a778"
 }

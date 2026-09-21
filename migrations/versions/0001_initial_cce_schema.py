@@ -19,45 +19,55 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # 1. Create Enums
-    lifecycle_enum = postgresql.ENUM(
-        'DRAFT', 'CONFIRMED', 'ACTIVE', 'COMPLETE', 'CANCEL_REQUESTED',
-        'CANCELLED', 'SUPERSEDED', 'INVALID',
-        name='lifecycle_status'
-    )
-    lifecycle_enum.create(op.get_bind(), checkfirst=True)
+    # 1. Create Enums explicitly via raw DDL with duplicate protection
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE lifecycle_status AS ENUM (
+                'DRAFT', 'CONFIRMED', 'ACTIVE', 'COMPLETE',
+                'CANCEL_REQUESTED', 'CANCELLED', 'SUPERSEDED', 'INVALID'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-    timeliness_enum = postgresql.ENUM(
-        'NOT_DUE', 'DUE', 'OVERDUE', 'NOT_APPLICABLE',
-        name='timeliness_status'
-    )
-    timeliness_enum.create(op.get_bind(), checkfirst=True)
+        DO $$ BEGIN
+            CREATE TYPE timeliness_status AS ENUM (
+                'NOT_DUE', 'DUE', 'OVERDUE', 'NOT_APPLICABLE'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-    evidence_review_enum = postgresql.ENUM(
-        'NO_EVIDENCE', 'ACTION_EVIDENCE_RECEIVED', 'AWAITING_REVIEW_EVIDENCE',
-        'AMBIGUOUS_REVIEW_EVIDENCE', 'VERIFIED_COMPLETE',
-        name='evidence_review_status'
-    )
-    evidence_review_enum.create(op.get_bind(), checkfirst=True)
+        DO $$ BEGIN
+            CREATE TYPE evidence_review_status AS ENUM (
+                'NO_EVIDENCE', 'ACTION_EVIDENCE_RECEIVED',
+                'AWAITING_REVIEW_EVIDENCE', 'AMBIGUOUS_REVIEW_EVIDENCE',
+                'VERIFIED_COMPLETE'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-    ownership_enum = postgresql.ENUM(
-        'OWNED', 'NO_OWNER',
-        name='ownership_status'
-    )
-    ownership_enum.create(op.get_bind(), checkfirst=True)
+        DO $$ BEGIN
+            CREATE TYPE ownership_status AS ENUM (
+                'OWNED', 'NO_OWNER'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-    audit_event_enum = postgresql.ENUM(
-        'CREATION', 'STATE_CHANGE', 'MANUAL_OVERRIDE', 'CANCELLATION',
-        'SUPERSEDED', 'OWNERSHIP_ASSIGNED', 'CONFIRMATION',
-        name='audit_event_type'
-    )
-    audit_event_enum.create(op.get_bind(), checkfirst=True)
+        DO $$ BEGIN
+            CREATE TYPE audit_event_type AS ENUM (
+                'CREATION', 'STATE_CHANGE', 'MANUAL_OVERRIDE',
+                'CANCELLATION', 'SUPERSEDED', 'OWNERSHIP_ASSIGNED', 'CONFIRMATION'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-    ambiguous_item_enum = postgresql.ENUM(
-        'OPEN', 'RESOLVED', 'OVERDUE',
-        name='ambiguous_item_status'
-    )
-    ambiguous_item_enum.create(op.get_bind(), checkfirst=True)
+        DO $$ BEGIN
+            CREATE TYPE ambiguous_item_status AS ENUM (
+                'OPEN', 'RESOLVED', 'OVERDUE'
+            );
+        EXCEPTION WHEN duplicate_object THEN null; END $$;
+    """)
+
+    lifecycle_type = postgresql.ENUM('DRAFT', 'CONFIRMED', 'ACTIVE', 'COMPLETE', 'CANCEL_REQUESTED', 'CANCELLED', 'SUPERSEDED', 'INVALID', name='lifecycle_status', create_type=False)
+    timeliness_type = postgresql.ENUM('NOT_DUE', 'DUE', 'OVERDUE', 'NOT_APPLICABLE', name='timeliness_status', create_type=False)
+    evidence_type = postgresql.ENUM('NO_EVIDENCE', 'ACTION_EVIDENCE_RECEIVED', 'AWAITING_REVIEW_EVIDENCE', 'AMBIGUOUS_REVIEW_EVIDENCE', 'VERIFIED_COMPLETE', name='evidence_review_status', create_type=False)
+    ownership_type = postgresql.ENUM('OWNED', 'NO_OWNER', name='ownership_status', create_type=False)
+    audit_event_type = postgresql.ENUM('CREATION', 'STATE_CHANGE', 'MANUAL_OVERRIDE', 'CANCELLATION', 'SUPERSEDED', 'OWNERSHIP_ASSIGNED', 'CONFIRMATION', name='audit_event_type', create_type=False)
+    ambiguous_item_type = postgresql.ENUM('OPEN', 'RESOLVED', 'OVERDUE', name='ambiguous_item_status', create_type=False)
 
     # 2. Create obligations Table
     op.create_table(
@@ -69,10 +79,10 @@ def upgrade() -> None:
         sa.Column('required_action_description', sa.Text(), nullable=False),
         sa.Column('due_window_start', sa.DateTime(timezone=True), nullable=True),
         sa.Column('due_window_end', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('lifecycle_status', sa.Enum('DRAFT', 'CONFIRMED', 'ACTIVE', 'COMPLETE', 'CANCEL_REQUESTED', 'CANCELLED', 'SUPERSEDED', 'INVALID', name='lifecycle_status', create_type=False), server_default='DRAFT', nullable=False),
-        sa.Column('timeliness_status', sa.Enum('NOT_DUE', 'DUE', 'OVERDUE', 'NOT_APPLICABLE', name='timeliness_status', create_type=False), server_default='NOT_DUE', nullable=False),
-        sa.Column('evidence_review_status', sa.Enum('NO_EVIDENCE', 'ACTION_EVIDENCE_RECEIVED', 'AWAITING_REVIEW_EVIDENCE', 'AMBIGUOUS_REVIEW_EVIDENCE', 'VERIFIED_COMPLETE', name='evidence_review_status', create_type=False), server_default='NO_EVIDENCE', nullable=False),
-        sa.Column('ownership_status', sa.Enum('OWNED', 'NO_OWNER', name='ownership_status', create_type=False), server_default='NO_OWNER', nullable=False),
+        sa.Column('lifecycle_status', lifecycle_type, server_default='DRAFT', nullable=False),
+        sa.Column('timeliness_status', timeliness_type, server_default='NOT_DUE', nullable=False),
+        sa.Column('evidence_review_status', evidence_type, server_default='NO_EVIDENCE', nullable=False),
+        sa.Column('ownership_status', ownership_type, server_default='NO_OWNER', nullable=False),
         sa.Column('assigned_team', sa.Text(), nullable=True),
         sa.Column('assigned_user_id', sa.Text(), nullable=True),
         sa.Column('superseded_by_id', postgresql.UUID(as_uuid=True), nullable=True),
@@ -117,7 +127,7 @@ def upgrade() -> None:
         sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text('gen_random_uuid()'), nullable=False),
         sa.Column('obligation_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('audit_seq', sa.Integer(), nullable=False),
-        sa.Column('event_type', sa.Enum('CREATION', 'STATE_CHANGE', 'MANUAL_OVERRIDE', 'CANCELLATION', 'SUPERSEDED', 'OWNERSHIP_ASSIGNED', 'CONFIRMATION', name='audit_event_type', create_type=False), nullable=False),
+        sa.Column('event_type', audit_event_type, nullable=False),
         sa.Column('actor_id', sa.Text(), nullable=False),
         sa.Column('previous_state', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column('new_state', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -139,7 +149,7 @@ def upgrade() -> None:
         sa.Column('proposed_evidence_snippet', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column('assigned_reviewer_id', sa.Text(), nullable=True),
         sa.Column('due_at', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('status', sa.Enum('OPEN', 'RESOLVED', 'OVERDUE', name='ambiguous_item_status', create_type=False), server_default='OPEN', nullable=False),
+        sa.Column('status', ambiguous_item_type, server_default='OPEN', nullable=False),
         sa.Column('resolution_rationale', sa.Text(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('clock_timestamp()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('clock_timestamp()'), nullable=False),
@@ -241,14 +251,11 @@ def downgrade() -> None:
     op.drop_table('obligations')
 
     # Drop Enums
-    bind = op.get_bind()
-    for enum_name in [
-        'ambiguous_item_status',
-        'audit_event_type',
-        'ownership_status',
-        'evidence_review_status',
-        'timeliness_status',
-        'lifecycle_status'
-    ]:
-        postgresql.ENUM(name=enum_name).drop(bind, checkfirst=True)
-
+    op.execute("""
+        DROP TYPE IF EXISTS ambiguous_item_status CASCADE;
+        DROP TYPE IF EXISTS audit_event_type CASCADE;
+        DROP TYPE IF EXISTS ownership_status CASCADE;
+        DROP TYPE IF EXISTS evidence_review_status CASCADE;
+        DROP TYPE IF EXISTS timeliness_status CASCADE;
+        DROP TYPE IF EXISTS lifecycle_status CASCADE;
+    """)

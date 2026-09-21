@@ -1,7 +1,7 @@
 # Graph Report - medical_catalogue  (2026-09-21)
 
 ## Corpus Check
-- 21 files · ~8,437 words
+- 21 files · ~8,546 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 3 file(s) not represented in the graph (top: (none) 1, .ini 1, .mako 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1828559b`
+- Built from commit: `9275679c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
