@@ -21,3 +21,8 @@ postgres_data/
 .vscode/
 *.swp
 
+# Graphify cache and backups (AST cache node hashes, date backups, signatures)
+graphify-out/cache/
+graphify-out/20[0-9][0-9]-*/
+graphify-out/*.sig
+
