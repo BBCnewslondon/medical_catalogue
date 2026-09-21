@@ -85,13 +85,10 @@ def test_relaxed_ownership_constraint_in_models(db_session):
         due_window_end=due_end,
         assigned_team="Acute Medical Unit",
         assigned_user_id=None,
+        ownership_status=OwnershipStatus.NO_OWNER,
     )
-    # Manually assert unallocated ownership status
-    ob.ownership_status = OwnershipStatus.NO_OWNER
-    # Keep audit log in sync with snapshot
-    ob.audit_logs[0].new_state = ob.get_dimensions_snapshot()
-
     db_session.flush()
+
     assert ob.ownership_status == OwnershipStatus.NO_OWNER
     assert ob.assigned_team == "Acute Medical Unit"
 
