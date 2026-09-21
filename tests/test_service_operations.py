@@ -1,20 +1,18 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from cce.audit import build_audit_log
 from cce.enums import (
     AuditEventType,
     EvidenceReviewStatus,
-    LifecycleStatus,
     OwnershipStatus,
     TimelinessStatus,
 )
-from cce.models import Obligation
 from cce.service import ObligationService
 
 
 def test_update_dimensions_service(db_session):
     """Verify ObligationService.update_dimensions updates fields and logs an audit record."""
-    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=UTC)
     ob = ObligationService.create_obligation(
         session=db_session,
         patient_id="PAT-SERVICE-01",
@@ -47,7 +45,7 @@ def test_update_dimensions_service(db_session):
 
 def test_assign_owner_service(db_session):
     """Verify ObligationService.assign_owner allocates clinician ownership and creates audit."""
-    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=UTC)
     ob = ObligationService.create_obligation(
         session=db_session,
         patient_id="PAT-SERVICE-02",
@@ -77,7 +75,7 @@ def test_assign_owner_service(db_session):
 
 def test_build_audit_log_helper(db_session):
     """Verify build_audit_log helper produces a valid ObligationAuditLog instance."""
-    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 12, 1, 12, 0, tzinfo=UTC)
     ob = ObligationService.create_obligation(
         session=db_session,
         patient_id="PAT-SERVICE-03",
@@ -99,4 +97,3 @@ def test_build_audit_log_helper(db_session):
     assert log_entry.audit_seq == ob.audit_seq
     assert log_entry.event_type == AuditEventType.CONFIRMATION
     assert log_entry.new_state["lifecycle_status"] == "DRAFT"
-

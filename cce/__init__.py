@@ -19,7 +19,10 @@ from cce.enums import (
 from cce.models import AmbiguousReviewItem, Base, Obligation, ObligationAuditLog
 from cce.service import ObligationService
 
+__version__ = "0.1.0"
+
 __all__ = [
+    "__version__",
     "AmbiguousItemStatus",
     "AuditEventType",
     "EvidenceReviewStatus",

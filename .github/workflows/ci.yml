@@ -111,3 +111,25 @@ jobs:
           name: coverage-report
           path: coverage.xml
 
+  release:
+    name: Semantic Release & Automated Publishing
+    runs-on: ubuntu-latest
+    needs: [test-and-migrations]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout Code with Full Git History
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Automated Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+

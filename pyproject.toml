@@ -16,6 +16,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.4.0",
     "mypy>=1.9.0",
+    "python-semantic-release>=9.0.0",
 ]
 
 [build-system]
@@ -86,3 +87,20 @@ exclude_lines = [
 ]
 show_missing = true
 fail_under = 85
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["cce/__init__.py:__version__"]
+commit_message = "chore(release): v{version} [skip ci]"
+commit_parser = "conventional"
+tag_format = "v{version}"
+
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease = false
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.publish]
+upload_to_vcs_release = true

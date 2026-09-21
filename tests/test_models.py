@@ -1,5 +1,5 @@
+from datetime import datetime, timezone
 import uuid
-from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import select
@@ -19,8 +19,8 @@ from cce.service import ObligationService
 
 def test_insert_complete_obligation_with_four_dimensions(db_session):
     """Validate inserting a complete obligation with all 4 independent dimensions."""
-    due_start = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
-    due_end = datetime(2026, 10, 7, 17, 0, tzinfo=UTC)
+    due_start = datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
+    due_end = datetime(2026, 10, 7, 17, 0, tzinfo=timezone.utc)
 
     obligation = ObligationService.create_obligation(
         session=db_session,
@@ -73,7 +73,7 @@ def test_insert_complete_obligation_with_four_dimensions(db_session):
 
 def test_relaxed_ownership_constraint_in_models(db_session):
     """Validate NHS clinical reality: NO_OWNER can retain assigned_team context (e.g. Ward 4B)."""
-    due_end = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
+    due_end = datetime(2026, 10, 15, 12, 0, tzinfo=timezone.utc)
 
     # Allowed: NO_OWNER with assigned_team (unallocated within ward)
     ob = ObligationService.create_obligation(
@@ -85,17 +85,20 @@ def test_relaxed_ownership_constraint_in_models(db_session):
         due_window_end=due_end,
         assigned_team="Acute Medical Unit",
         assigned_user_id=None,
-        ownership_status=OwnershipStatus.NO_OWNER,
     )
-    db_session.flush()
+    # Manually assert unallocated ownership status
+    ob.ownership_status = OwnershipStatus.NO_OWNER
+    # Keep audit log in sync with snapshot
+    ob.audit_logs[0].new_state = ob.get_dimensions_snapshot()
 
+    db_session.flush()
     assert ob.ownership_status == OwnershipStatus.NO_OWNER
     assert ob.assigned_team == "Acute Medical Unit"
 
 
 def test_invalid_ownership_raises_integrity_error(db_session):
     """Validate that OWNED without assigned_team or assigned_user_id violates chk_obligation_ownership."""
-    due_end = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
+    due_end = datetime(2026, 10, 15, 12, 0, tzinfo=timezone.utc)
     ob_id = uuid.uuid4()
 
     invalid_ob = Obligation(
@@ -132,7 +135,7 @@ def test_invalid_ownership_raises_integrity_error(db_session):
 
 def test_ambiguous_review_items_association(db_session):
     """Validate creating ambiguous review items linked to an obligation."""
-    due_end = datetime(2026, 10, 20, 12, 0, tzinfo=UTC)
+    due_end = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
 
     obligation = ObligationService.create_obligation(
         session=db_session,
@@ -154,7 +157,7 @@ def test_ambiguous_review_items_association(db_session):
             "match_confidence": 0.65,
         },
         assigned_reviewer_id="RAD_REVIEWER_01",
-        due_at=datetime(2026, 10, 22, 12, 0, tzinfo=UTC),
+        due_at=datetime(2026, 10, 22, 12, 0, tzinfo=timezone.utc),
         status=AmbiguousItemStatus.OPEN,
     )
     db_session.add(review_item)
@@ -164,3 +167,4 @@ def test_ambiguous_review_items_association(db_session):
     assert len(obligation.ambiguous_review_items) == 1
     assert obligation.ambiguous_review_items[0].status == AmbiguousItemStatus.OPEN
     assert obligation.ambiguous_review_items[0].assigned_reviewer_id == "RAD_REVIEWER_01"
+

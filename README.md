@@ -103,3 +103,24 @@ Or individual tools:
 
 Pre-commit hooks are also configured via `.pre-commit-config.yaml`.
 
+---
+
+## Automated Semantic Release
+
+The repository uses [python-semantic-release](https://python-semantic-release.readthedocs.io/) to automate semantic versioning, changelog generation, and GitHub Releases based on [Conventional Commits](https://www.conventionalcommits.org/):
+
+| Commit Type | Release Type | Example |
+|---|---|---|
+| `fix:` | Patch Release (`0.1.0` $\rightarrow$ `0.1.1`) | `fix(audit): correct deferred trigger timestamp check` |
+| `feat:` | Minor Release (`0.1.0` $\rightarrow$ `0.2.0`) | `feat(models): add ambiguous review item priority` |
+| `feat!:` or `BREAKING CHANGE:` | Major Release (`0.1.0` $\rightarrow$ `1.0.0`) | `feat!: overhaul state machine transitions` |
+| `chore:`, `docs:`, `ci:` | No Release | `docs: update deployment guidelines` |
+
+### Release Workflow
+When code is merged to `main` and passes all CI quality gates (linting, typing, migrations, tests):
+1. Analyzes commits since the last release.
+2. Calculates the next semantic version number.
+3. Automatically updates `version` in `pyproject.toml` and `__version__` in `cce/__init__.py`.
+4. Appends release notes to `CHANGELOG.md`.
+5. Commits changes with `chore(release): vX.Y.Z [skip ci]`, creates git tag `vX.Y.Z`, and creates a GitHub Release.
+
