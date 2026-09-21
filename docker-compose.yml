@@ -1,0 +1,22 @@
+services:
+  cce-postgres:
+    image: postgres:16-alpine
+    container_name: cce-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cce_user
+      POSTGRES_PASSWORD: cce_password
+      POSTGRES_DB: cce_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cce_user -d cce_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+

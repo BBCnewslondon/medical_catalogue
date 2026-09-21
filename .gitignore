@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Postgres data (from docker-compose local volume if bound to folder)
+postgres_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
