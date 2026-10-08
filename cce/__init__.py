@@ -1,4 +1,4 @@
-"""Clinical Completion Engine (CCE) - Database and Audit Core."""
+"""Clinical Completion Engine (CCE) - Safety-Critical Medical State Machine & Audit Core."""
 
 from cce.audit import (
     AuditMissingError,
@@ -8,6 +8,12 @@ from cce.audit import (
     build_audit_log,
     register_audit_listeners,
 )
+from cce.engine import (
+    ObligationStateTuple,
+    TransitionContext,
+    TransitionResult,
+    transition,
+)
 from cce.enums import (
     AmbiguousItemStatus,
     AuditEventType,
@@ -15,6 +21,19 @@ from cce.enums import (
     LifecycleStatus,
     OwnershipStatus,
     TimelinessStatus,
+)
+from cce.events import (
+    AmbiguousEvidenceFlaggedEvent,
+    AssignOwnershipEvent,
+    BaseDomainEvent,
+    CancelObligationEvent,
+    ClinicalReviewDocumentedEvent,
+    ClockTickEvent,
+    DiagnosticReportReceivedEvent,
+    DomainEvent,
+    HumanConfirmEvent,
+    ManualOverrideEvent,
+    SupersedePlanEvent,
 )
 from cce.models import AmbiguousReviewItem, Base, Obligation, ObligationAuditLog
 from cce.service import ObligationService
@@ -40,4 +59,19 @@ __all__ = [
     "build_audit_log",
     "register_audit_listeners",
     "ObligationService",
+    "ObligationStateTuple",
+    "TransitionContext",
+    "TransitionResult",
+    "transition",
+    "BaseDomainEvent",
+    "DomainEvent",
+    "HumanConfirmEvent",
+    "ClockTickEvent",
+    "DiagnosticReportReceivedEvent",
+    "ClinicalReviewDocumentedEvent",
+    "AmbiguousEvidenceFlaggedEvent",
+    "SupersedePlanEvent",
+    "CancelObligationEvent",
+    "ManualOverrideEvent",
+    "AssignOwnershipEvent",
 ]

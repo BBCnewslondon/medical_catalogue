@@ -4,14 +4,21 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from cce.engine.state_machine import (
+    ObligationStateTuple,
+    TransitionContext,
+    transition,
+)
 from cce.enums import (
+    AmbiguousItemStatus,
     AuditEventType,
     EvidenceReviewStatus,
     LifecycleStatus,
     OwnershipStatus,
     TimelinessStatus,
 )
-from cce.models import Obligation, ObligationAuditLog
+from cce.events import DomainEvent
+from cce.models import AmbiguousReviewItem, Obligation, ObligationAuditLog
 
 
 class ObligationService:
@@ -257,3 +264,71 @@ class ObligationService:
 
         session.add(audit_entry)
         return audit_entry
+
+    @staticmethod
+    def process_event(
+        session: Session,
+        obligation: Obligation,
+        event: DomainEvent,
+    ) -> tuple[Obligation, ObligationAuditLog | None]:
+        """Process a domain event against an obligation using the pure transition engine.
+
+        Deterministically coordinates multi-dimensional state updates and guarantees
+        strict 1-to-1 sequence pairing with an append-only ObligationAuditLog.
+        """
+        current_state = ObligationStateTuple.from_obligation(obligation)
+        context = TransitionContext.from_obligation(obligation)
+
+        result = transition(current_state, event, context)
+
+        if not result.has_state_changed:
+            return obligation, None
+
+        next_seq = obligation.audit_seq + 1
+
+        # Apply state dimensions
+        obligation.lifecycle_status = result.new_state.lifecycle_status
+        obligation.timeliness_status = result.new_state.timeliness_status
+        obligation.evidence_review_status = result.new_state.evidence_review_status
+        obligation.ownership_status = result.new_state.ownership_status
+
+        # Apply updated fields
+        if "assigned_team" in result.updated_fields:
+            obligation.assigned_team = result.updated_fields["assigned_team"]
+        if "assigned_user_id" in result.updated_fields:
+            obligation.assigned_user_id = result.updated_fields["assigned_user_id"]
+        if "superseded_by_id" in result.updated_fields:
+            obligation.superseded_by_id = result.updated_fields["superseded_by_id"]
+        if "migration_flag" in result.updated_fields:
+            obligation.migration_flag = result.updated_fields["migration_flag"]
+
+        obligation.audit_seq = next_seq
+
+        audit_entry = ObligationAuditLog(
+            obligation_id=obligation.id,
+            audit_seq=next_seq,
+            event_type=result.audit_event_type,
+            actor_id=event.actor_id,
+            previous_state=result.previous_state.to_dict(),
+            new_state=result.new_state.to_dict(),
+            reason_code=result.reason_code,
+            rationale_text=result.rationale_text,
+            evidence_reference=result.evidence_reference,
+        )
+        session.add(audit_entry)
+
+        if result.ambiguous_review_data:
+            due_at = result.ambiguous_review_data.get("due_at") or obligation.due_window_end
+            review_item = AmbiguousReviewItem(
+                obligation_id=obligation.id,
+                proposed_evidence_snippet=result.ambiguous_review_data.get(
+                    "proposed_evidence_snippet", {}
+                ),
+                assigned_reviewer_id=result.ambiguous_review_data.get("assigned_reviewer_id"),
+                due_at=due_at,
+                status=AmbiguousItemStatus.OPEN,
+                resolution_rationale=None,
+            )
+            session.add(review_item)
+
+        return obligation, audit_entry
