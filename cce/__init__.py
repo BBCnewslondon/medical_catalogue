@@ -38,7 +38,7 @@ from cce.events import (
 from cce.models import AmbiguousReviewItem, Base, Obligation, ObligationAuditLog
 from cce.service import ObligationService
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "__version__",

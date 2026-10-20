@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.2.0 (2026-10-20)
+
+### Features
+
+- Add synthetic scenario simulation and testing framework
+  ([`11f782a`](https://github.com/BBCnewslondon/medical_catalogue/commit/11f782a069094a09d75eb276e73f2e7272e62db1))
+
+- Implemented a new CLI tool for executing synthetic benchmark clinical scenarios with detailed
+  playback and verification. - Added a comprehensive test suite for validating the execution of all
+  synthetic scenarios against a PostgreSQL database. - Updated manifest.json to reflect changes in
+  file modifications and added new files for the simulator and tests. - Introduced new modules for
+  scenario parsing, running, and result handling, ensuring strict adherence to expected state
+  transitions and audit logs.
+
+
 ## v0.1.0 (2026-09-21)
 
 ### Features
