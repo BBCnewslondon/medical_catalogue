@@ -13,6 +13,7 @@ from typing import Any, NamedTuple
 
 from cce.audit import InvalidStateTransitionError
 from cce.enums import (
+    AmbiguousItemStatus,
     AuditEventType,
     EvidenceReviewStatus,
     LifecycleStatus,
@@ -192,7 +193,9 @@ def transition(
 
     elif isinstance(event, ClockTickEvent):
         t = event.current_simulated_time
-        if t > context.due_window_end:
+        if current_state.evidence_review_status != EvidenceReviewStatus.NO_EVIDENCE:
+            new_timeliness = TimelinessStatus.NOT_APPLICABLE
+        elif t > context.due_window_end:
             new_timeliness = TimelinessStatus.OVERDUE
         elif context.due_window_start is not None and t >= context.due_window_start:
             new_timeliness = TimelinessStatus.DUE
@@ -300,11 +303,21 @@ def transition(
                 "Cannot flag ambiguous evidence: obligation is already VERIFIED_COMPLETE."
             )
 
+        target_evidence = (
+            EvidenceReviewStatus.AWAITING_REVIEW_EVIDENCE
+            if event.reason_code == "NO_REVIEW_EVIDENCE"
+            else EvidenceReviewStatus.AMBIGUOUS_REVIEW_EVIDENCE
+        )
         new_state = ObligationStateTuple(
             lifecycle_status=LifecycleStatus.ACTIVE,
             timeliness_status=current_state.timeliness_status,
-            evidence_review_status=EvidenceReviewStatus.AMBIGUOUS_REVIEW_EVIDENCE,
+            evidence_review_status=target_evidence,
             ownership_status=current_state.ownership_status,
+        )
+        review_item_status = (
+            AmbiguousItemStatus.OVERDUE
+            if event.reason_code == "NO_REVIEW_EVIDENCE"
+            else AmbiguousItemStatus.OPEN
         )
         evidence_ref = {
             "evidence_snippet": event.evidence_snippet,
@@ -313,8 +326,11 @@ def transition(
         }
         ambiguous_data = {
             "proposed_evidence_snippet": event.evidence_snippet,
-            "assigned_reviewer_id": event.assigned_reviewer_id,
+            "assigned_reviewer_id": event.assigned_reviewer_id
+            or context.assigned_team
+            or context.assigned_user_id,
             "due_at": event.due_at,
+            "status": review_item_status,
         }
         return TransitionResult(
             previous_state=current_state,
@@ -375,6 +391,11 @@ def transition(
         )
 
     elif isinstance(event, ManualOverrideEvent):
+        if not event.reason_code or not event.rationale_text or not event.rationale_text.strip():
+            raise InvalidStateTransitionError(
+                "Manual override requires mandatory structured reason_code and clinical rationale_text."
+            )
+
         new_state = ObligationStateTuple(
             lifecycle_status=LifecycleStatus.COMPLETE,
             timeliness_status=TimelinessStatus.NOT_APPLICABLE,

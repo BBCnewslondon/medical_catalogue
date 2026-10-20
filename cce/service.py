@@ -319,6 +319,7 @@ class ObligationService:
 
         if result.ambiguous_review_data:
             due_at = result.ambiguous_review_data.get("due_at") or obligation.due_window_end
+            status = result.ambiguous_review_data.get("status", AmbiguousItemStatus.OPEN)
             review_item = AmbiguousReviewItem(
                 obligation_id=obligation.id,
                 proposed_evidence_snippet=result.ambiguous_review_data.get(
@@ -326,7 +327,7 @@ class ObligationService:
                 ),
                 assigned_reviewer_id=result.ambiguous_review_data.get("assigned_reviewer_id"),
                 due_at=due_at,
-                status=AmbiguousItemStatus.OPEN,
+                status=status,
                 resolution_rationale=None,
             )
             session.add(review_item)
