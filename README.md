@@ -105,6 +105,23 @@ Pre-commit hooks are also configured via `.pre-commit-config.yaml`.
 
 ---
 
+## Clinical Obligation Oversight Dashboard
+
+The repository includes an interactive full-stack **Clinical Obligation & Oversight Dashboard** (`cce/dashboard/`) implementing the *Clinical Clarity System* design across four governance views backed by `ObligationService`, SQLAlchemy audit listeners, and `ScenarioRunner`:
+
+- **Oversight Dashboard**: 4 KPI operational cards, Duty Handshake Obligations Ledger with 4-dimension status filters, and an Immediate Inspector sidebar for live domain actions (`confirm`, `claim`, `receive_report`, `document_review`, `clock_tick`).
+- **Ambiguous Review Queue**: Split comparison matrix between expected obligations and raw HL7v2 ORU^R01 snippets, confidence scoring, entity alignment matrix, human adjudication controls (`confirm`, `reject`, `clarify`), signed FHIR R4 `Observation` inspection, and live ingestion simulation.
+- **Attribution & Override Log**: Append-only `obligation_audit_logs` ledger, anti-gaming guard rejections view, and a **Clinical Safety Gate** modal (`ManualOverrideEvent`, `AssignOwnershipEvent`, `SupersedePlanEvent`, `CancelObligationEvent`).
+- **Compliance Audit & Time Machine**: Ground-truth matrix and chronological day-by-day step playback across all 10 scenarios in `SYNTHETIC CASES V1.csv`.
+
+Launch the local dashboard server (automatically connects to PostgreSQL when available, or falls back cleanly to SQLite):
+
+```bash
+.venv/bin/python scripts/run_dashboard.py --host 127.0.0.1 --port 8080
+```
+
+---
+
 ## Automated Semantic Release
 
 The repository uses [python-semantic-release](https://python-semantic-release.readthedocs.io/) to automate semantic versioning, changelog generation, and GitHub Releases based on [Conventional Commits](https://www.conventionalcommits.org/):

@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clinical Obligation &amp; Oversight Dashboard — CCE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main clinical workspace</a>
+
+    <!-- Persistent Staging Telemetry + Navigation Header -->
+    <header class="app-header">
+      <div class="telemetry-strip">
+        <div class="telemetry-left">
+          <span class="sim-pill">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            STAGING / SIMULATION ACTIVE
+          </span>
+          <span class="facility-badge" id="backend-badge">
+            Mercy General — Acute Care Division • SQLite
+          </span>
+        </div>
+
+        <div class="telemetry-controls">
+          <label for="scenario-select" class="sr-only">Select synthetic benchmark scenario</label>
+          <select id="scenario-select" class="scenario-select">
+            <option value="ALL">All Scenarios (CCE-001 – CCE-010)</option>
+            <option value="CCE-001">CCE-001 • Routine Follow-Up Completion</option>
+            <option value="CCE-002">CCE-002 • Overdue Urgent Imaging</option>
+            <option value="CCE-003">CCE-003 • Unreviewed Cardiac Result</option>
+            <option value="CCE-004">CCE-004 • Ambiguous Evidence Flagged</option>
+            <option value="CCE-005">CCE-005 • Unowned Clinical Obligation</option>
+            <option value="CCE-006">CCE-006 • Plan Supersession Chain</option>
+            <option value="CCE-007">CCE-007 • Legitimate Order Cancellation</option>
+            <option value="CCE-008">CCE-008 • Scheduled Without Evidence (Trap)</option>
+            <option value="CCE-009">CCE-009 • Action Code Mismatch Reject</option>
+            <option value="CCE-010">CCE-010 • Empty Override Guard</option>
+          </select>
+          <button type="button" id="btn-run-scenario" class="btn btn-sm btn-tonal">
+            Run Scenario
+          </button>
+          <button type="button" id="btn-reset-all" class="btn btn-sm btn-ghost-light">
+            Reset / Run All
+          </button>
+          <span class="sync-badge" id="sync-status-pill">10/10 Benchmarks Synced</span>
+        </div>
+      </div>
+
+      <div class="nav-shell">
+        <div class="brand-cluster">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z" />
+              <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title">CCE Clinical Completion Engine</div>
+            <div class="brand-subtitle">4-Dimensional Clinical Obligation Governance</div>
+          </div>
+        </div>
+
+        <nav class="primary-nav" aria-label="Dashboard sections">
+          <button type="button" class="nav-link is-active" data-view="oversight" aria-current="page">
+            Oversight Dashboard
+          </button>
+          <button type="button" class="nav-link" data-view="queue">
+            Ambiguous Review Queue
+            <span class="nav-count-badge" id="nav-queue-badge">0 Pending</span>
+          </button>
+          <button type="button" class="nav-link" data-view="governance">
+            Attribution &amp; Override Log
+          </button>
+          <button type="button" class="nav-link" data-view="audit">
+            Compliance Audit
+            <span class="nav-count-badge nav-count-pass" id="nav-audit-badge">10/10</span>
+          </button>
+        </nav>
+
+        <div class="nav-right">
+          <search class="header-search">
+            <label for="global-search" class="sr-only">Search patient, MRN, or action code</label>
+            <input
+              type="search"
+              id="global-search"
+              placeholder="Search patient, MRN, action..."
+              autocomplete="off"
+            />
+          </search>
+
+          <div class="clinician-chip" title="Authenticated Oversight Lead">
+            <span class="avatar-monogram" aria-hidden="true">SJ</span>
+            <div class="clinician-meta">
+              <span class="clinician-name">Sarah Jensen, RN</span>
+              <span class="clinician-role">Oversight Lead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-shell">
+      <!-- =================================================================== -->
+      <!-- VIEW 1: OVERSIGHT DASHBOARD                                         -->
+      <!-- =================================================================== -->
+      <section id="view-oversight" class="view-section">
+        <div class="section-header-row">
+          <div>
+            <span class="eyebrow">Duty Handshake Governance</span>
+            <h1 class="page-title">Clinical Obligation Oversight Dashboard</h1>
+            <p class="page-desc">
+              Real-time state monitoring across Lifecycle, Timeliness, Evidence Review, and Ownership dimensions.
+            </p>
+          </div>
+          <div class="header-actions">
+            <button type="button" id="btn-open-safety-gate-top" class="btn btn-primary">
+              + Clinical Safety Gate / Override
+            </button>
+            <button type="button" id="btn-export-csv" class="btn btn-secondary">
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 KPI Bento Cards -->
+        <div class="kpi-grid" role="group" aria-label="Operational risk metrics">
+          <button type="button" class="kpi-card kpi-primary" data-kpi-filter="active">
+            <span class="kpi-label">Active Obligation Load</span>
+            <span class="kpi-value tabular-nums" id="kpi-active">0</span>
+            <span class="kpi-sub">Open clinical duties in active workflow</span>
+          </button>
+
+          <button type="button" class="kpi-card kpi-danger" data-kpi-filter="overdue">
+            <span class="kpi-label">Overdue Action Required</span>
+            <span class="kpi-value tabular-nums" id="kpi-overdue">0</span>
+            <span class="kpi-sub">Past SLA window • escalate immediately</span>
+          </button>
+
+          <button type="button" class="kpi-card kpi-warning" data-kpi-filter="unreviewed">
+            <span class="kpi-label">Unreviewed Test Results</span>
+            <span class="kpi-value tabular-nums" id="kpi-unreviewed">0</span>
+            <span class="kpi-sub">Evidence landed or ambiguous match pending</span>
+          </button>
+
+          <button type="button" class="kpi-card kpi-neutral" data-kpi-filter="no_owner">
+            <span class="kpi-label">Unassigned / No Owner</span>
+            <span class="kpi-value tabular-nums" id="kpi-unassigned">0</span>
+            <span class="kpi-sub">Orphaned clinical follow-ups awaiting claim</span>
+          </button>
+        </div>
+
+        <!-- Split Workspace: Ledger (Left 8) + Immediate Inspector (Right 4) -->
+        <div class="oversight-split">
+          <div class="ledger-panel card-surface">
+            <div class="ledger-toolbar">
+              <div>
+                <h2 id="ledger-heading" class="card-title">Duty Handshake Obligations Ledger</h2>
+                <p class="card-sub" id="ledger-count-label">Showing active obligations</p>
+              </div>
+              <div class="filter-pills" role="group" aria-label="Filter obligations by status">
+                <button type="button" class="filter-pill is-active" data-filter="all">All Records</button>
+                <button type="button" class="filter-pill" data-filter="active">Active</button>
+                <button type="button" class="filter-pill" data-filter="overdue">Overdue</button>
+                <button type="button" class="filter-pill" data-filter="unreviewed">Unreviewed Results</button>
+                <button type="button" class="filter-pill" data-filter="no_owner">No Owner</button>
+                <button type="button" class="filter-pill" data-filter="terminal">Terminal</button>
+              </div>
+            </div>
+
+            <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="ledger-heading">
+              <table class="data-table" id="obligations-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Patient &amp; Obligation</th>
+                    <th scope="col">4-Dimension Verification State</th>
+                    <th scope="col">Ownership &amp; SLA</th>
+                    <th scope="col">Oversight Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="obligations-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="inspector-panel card-surface" aria-labelledby="inspector-heading">
+            <div class="inspector-header">
+              <div>
+                <span class="eyebrow">Immediate Inspector</span>
+                <h2 id="inspector-heading" class="card-title">Select an Obligation</h2>
+              </div>
+              <span class="mono-tag" id="inspector-case-tag">—</span>
+            </div>
+
+            <div id="inspector-body" class="inspector-body">
+              <p class="empty-muted">Select any row from the Obligations Ledger to inspect 4D dimensions, trigger clinical events, or view immutable audit provenance.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VIEW 2: AMBIGUOUS REVIEW QUEUE                                      -->
+      <!-- =================================================================== -->
+      <section id="view-queue" class="view-section" hidden>
+        <div class="section-header-row">
+          <div>
+            <span class="eyebrow">Adjudication Engine v4.2</span>
+            <h1 class="page-title">Ambiguous Review Queue</h1>
+            <p class="page-desc">
+              Human-in-the-loop reconciliation for discrepant HL7/FHIR diagnostic feeds and unattested results.
+            </p>
+          </div>
+          <div class="queue-nav-bar" id="queue-controls-bar">
+            <span class="queue-counter-pill tabular-nums" id="queue-position-pill">Queue: 0 of 0</span>
+            <button type="button" id="btn-queue-prev" class="btn btn-sm btn-secondary">Previous</button>
+            <button type="button" id="btn-queue-next" class="btn btn-sm btn-secondary">Next</button>
+            <button type="button" id="btn-simulate-ingest" class="btn btn-sm btn-tonal">
+              + Simulate HL7 Ingestion
+            </button>
+          </div>
+        </div>
+
+        <!-- Screen 3 Confirmation Banner (hidden until an adjudication completes) -->
+        <div id="reconciliation-banner" class="reconciliation-banner" role="status" hidden>
+          <div class="recon-left">
+            <span class="recon-icon" aria-hidden="true">✓</span>
+            <div>
+              <div class="recon-title" id="recon-title">Obligation Successfully Reconciled</div>
+              <div class="recon-sub" id="recon-sub">Verified and sealed in immutable audit ledger.</div>
+            </div>
+          </div>
+          <div class="recon-actions">
+            <button type="button" id="btn-view-signed-fhir" class="btn btn-sm btn-secondary">
+              View Signed FHIR
+            </button>
+            <button type="button" id="btn-dismiss-recon" class="btn btn-sm btn-ghost" aria-label="Dismiss confirmation banner">
+              Dismiss
+            </button>
+          </div>
+        </div>
+
+        <!-- Pending Ambiguous Match Panel (Screens 2 & 3) -->
+        <div id="queue-active-workspace"></div>
+
+        <!-- All Caught Up State (Screen 4) -->
+        <div id="queue-empty-workspace" hidden></div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VIEW 3: ATTRIBUTION & OVERRIDE LOG                                  -->
+      <!-- =================================================================== -->
+      <section id="view-governance" class="view-section" hidden>
+        <div class="section-header-row">
+          <div>
+            <span class="eyebrow">Clinical Governance Matrix</span>
+            <h1 class="page-title">Attribution &amp; Override Log</h1>
+            <p class="page-desc">
+              Immutable audit trail of manual overrides, handoff attribution transfers, supersessions, and anti-gaming blocks.
+            </p>
+          </div>
+          <div class="header-actions">
+            <button type="button" id="btn-open-safety-gate-gov" class="btn btn-primary">
+              Open Clinical Safety Gate
+            </button>
+          </div>
+        </div>
+
+        <div class="gov-summary-grid">
+          <div class="card-surface gov-stat-card">
+            <span class="kpi-label">EHR Gateway Integrity</span>
+            <strong class="gov-stat-val text-teal">100% Attestation</strong>
+            <span class="kpi-sub">All state mutations enforce transactional ORM audit listeners</span>
+          </div>
+          <div class="card-surface gov-stat-card">
+            <span class="kpi-label">24h Protocol Overrides &amp; Transfers</span>
+            <strong class="gov-stat-val tabular-nums" id="gov-override-count">0</strong>
+            <span class="kpi-sub">Attributed events requiring mandatory clinical rationale</span>
+          </div>
+          <div class="card-surface gov-stat-card">
+            <span class="kpi-label">Blocked Anti-Gaming Attempts</span>
+            <strong class="gov-stat-val text-danger tabular-nums" id="gov-blocked-count">0</strong>
+            <span class="kpi-sub">Rejected empty-rationale closures &amp; action code mismatches</span>
+          </div>
+        </div>
+
+        <div class="card-surface gov-table-card">
+          <div class="ledger-toolbar">
+            <div>
+              <h2 id="gov-table-heading" class="card-title">Immutable Governance &amp; Attribution Ledger</h2>
+              <p class="card-sub">Append-only `obligation_audit_logs` stream protected by SQLAlchemy immutability guards</p>
+            </div>
+            <div class="filter-pills" role="group" aria-label="Filter governance log entries">
+              <button type="button" class="gov-filter-pill is-active" data-gov-filter="ALL">All Logs</button>
+              <button type="button" class="gov-filter-pill" data-gov-filter="MANUAL_OVERRIDE">Protocol Overrides</button>
+              <button type="button" class="gov-filter-pill" data-gov-filter="OWNERSHIP_ASSIGNED">Attribution Transfers</button>
+              <button type="button" class="gov-filter-pill" data-gov-filter="SUPERSEDED_CANCELLED">Supersessions &amp; Cancels</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="gov-table-heading">
+            <table class="data-table" id="governance-table">
+              <thead>
+                <tr>
+                  <th scope="col">Patient &amp; Seq</th>
+                  <th scope="col">Event Type &amp; Reason</th>
+                  <th scope="col">Actor</th>
+                  <th scope="col">State Transition</th>
+                  <th scope="col">Clinical Rationale &amp; Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="governance-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-surface anti-gaming-card">
+          <div class="ledger-toolbar">
+            <div>
+              <h2 class="card-title">Anti-Gaming Guard &amp; Validation Blocks</h2>
+              <p class="card-sub">
+                Attempts rejected by `cce.engine.state_machine.transition()` (e.g., blank rationale or mismatched LOINC/action codes)
+              </p>
+            </div>
+          </div>
+          <div id="anti-gaming-list" class="anti-gaming-list"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VIEW 4: COMPLIANCE AUDIT & TIME MACHINE                             -->
+      <!-- =================================================================== -->
+      <section id="view-audit" class="view-section" hidden>
+        <div class="section-header-row">
+          <div>
+            <span class="eyebrow">Synthetic Benchmark Suite • SYNTHETIC CASES V1.csv</span>
+            <h1 class="page-title">Compliance Audit &amp; Time Machine</h1>
+            <p class="page-desc">
+              Deterministic day-by-day execution trace verifying all 10 clinical safety benchmarks against CCE ground truth.
+            </p>
+          </div>
+          <div class="header-actions">
+            <button type="button" id="btn-rerun-all-benchmarks" class="btn btn-primary">
+              Re-Run Full Benchmark Suite
+            </button>
+          </div>
+        </div>
+
+        <div class="audit-split">
+          <div class="card-surface">
+            <div class="ledger-toolbar">
+              <div>
+                <h2 id="bench-table-heading" class="card-title">Benchmark Verification Matrix</h2>
+                <p class="card-sub">Executed via `cce.simulator.runner.ScenarioRunner`</p>
+              </div>
+            </div>
+            <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="bench-table-heading">
+              <table class="data-table" id="benchmarks-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Case ID &amp; Clinical Role</th>
+                    <th scope="col">Expected 4D Tuple</th>
+                    <th scope="col">Actual 4D Tuple</th>
+                    <th scope="col">Audit / Flag</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="benchmarks-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="card-surface timeline-panel" aria-labelledby="timeline-heading">
+            <div class="inspector-header">
+              <div>
+                <span class="eyebrow">Chronological Time Machine</span>
+                <h2 id="timeline-heading" class="card-title">Select Case to Inspect</h2>
+              </div>
+              <span class="mono-tag" id="timeline-case-tag">—</span>
+            </div>
+            <div id="timeline-body" class="timeline-body"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>CCE Clinical Completion Engine • 4-Dimensional State Governance</span>
+      <span>HL7v2 / FHIR R4 Bridge • Append-Only Audit Listeners Active</span>
+    </footer>
+
+    <!-- ===================================================================== -->
+    <!-- NATIVE DIALOGS (Strict modern-web-guidance compliance)                -->
+    <!-- ===================================================================== -->
+
+    <!-- Clinical Safety Gate Modal (Stitch Screen 5) -->
+    <dialog id="safety-gate-dialog" class="modal-dialog modal-lg" closedby="any" aria-labelledby="safety-gate-title">
+      <form id="safety-gate-form" class="dialog-shell" novalidate>
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">Clinical Safety Gate</span>
+            <h2 id="safety-gate-title" class="dialog-title">
+              Clinical Obligation Override &amp; Attribution Reassignment
+            </h2>
+          </div>
+          <button type="submit" value="cancel" formmethod="dialog" class="btn-icon-close" aria-label="Close modal">
+            ✕
+          </button>
+        </div>
+
+        <div class="dialog-body">
+          <div class="form-field">
+            <label for="sg-obligation-select" class="field-label">Target Clinical Obligation</label>
+            <select id="sg-obligation-select" class="text-input"></select>
+          </div>
+
+          <fieldset class="step-fieldset">
+            <legend class="field-label">Step 1 • Select Governance Intervention</legend>
+            <div class="radio-card-grid">
+              <label class="radio-card">
+                <input type="radio" name="sg-action" value="override" checked />
+                <span class="rc-title">Protocol Override</span>
+                <span class="rc-sub">ManualOverrideEvent</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="sg-action" value="reassign" />
+                <span class="rc-title">Transfer Attribution</span>
+                <span class="rc-sub">AssignOwnershipEvent</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="sg-action" value="supersede" />
+                <span class="rc-title">Supersede Care Plan</span>
+                <span class="rc-sub">SupersedePlanEvent</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="sg-action" value="cancel" />
+                <span class="rc-title">Cancel Order</span>
+                <span class="rc-sub">CancelObligationEvent</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="two-col-fields">
+            <div class="form-field">
+              <label for="sg-reason-code" class="field-label">Step 2 • Standardized Reason Code</label>
+              <select id="sg-reason-code" class="text-input">
+                <option value="RC-101">RC-101 — Clinical Equivalency Documented</option>
+                <option value="RC-102">RC-102 — Shift Handoff / Service Transfer</option>
+                <option value="RC-103">RC-103 — Patient Declined / Contraindicated</option>
+                <option value="RC-104">RC-104 — Replaced by Escalated Diagnostic Plan</option>
+                <option value="RC-105">RC-105 — External EHR Reconciliation Verified</option>
+              </select>
+            </div>
+
+            <div class="form-field" id="sg-reassign-group" hidden>
+              <label for="sg-target-owner" class="field-label">Target Clinician / Service Pool</label>
+              <input
+                type="text"
+                id="sg-target-owner"
+                class="text-input"
+                placeholder="e.g. Dr. Julian Vance (Cardiology)"
+                value="Dr. Julian Vance"
+              />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <div class="label-split">
+              <label for="sg-rationale" class="field-label">
+                Step 3 • Mandatory Clinical Rationale
+              </label>
+              <button type="button" id="btn-test-empty-guard" class="btn-link-danger">
+                Test Empty Rationale Guard (CCE-010)
+              </button>
+            </div>
+            <textarea
+              id="sg-rationale"
+              rows="3"
+              class="text-input"
+              placeholder="Document clinical justification, patient discussion, or cross-department handoff details..."
+            ></textarea>
+            <div class="field-hint-row">
+              <span id="sg-char-count" class="hint-text tabular-nums">0 characters (non-empty required by CCE guard)</span>
+            </div>
+          </div>
+
+          <div class="attestation-box">
+            <div class="two-col-fields">
+              <div class="form-field">
+                <label for="sg-pin" class="field-label">Step 4 • Clinician Attestation PIN</label>
+                <input
+                  type="password"
+                  id="sg-pin"
+                  class="text-input"
+                  value="4821"
+                  autocomplete="off"
+                />
+              </div>
+              <label class="checkbox-attest">
+                <input type="checkbox" id="sg-attest-check" checked />
+                <span>I attest this entry accurately reflects the clinical record and will become immutable in `obligation_audit_logs`.</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="sg-error-banner" class="dialog-error-banner" role="alert" hidden></div>
+        </div>
+
+        <div class="dialog-footer">
+          <button type="submit" value="cancel" formmethod="dialog" class="btn btn-secondary">
+            Cancel
+          </button>
+          <button type="submit" id="btn-submit-safety-gate" class="btn btn-primary">
+            Sign &amp; Execute Intervention
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Signed FHIR R4 Observation Dialog -->
+    <dialog id="fhir-dialog" class="modal-dialog modal-md" closedby="any" aria-labelledby="fhir-dialog-title">
+      <div class="dialog-shell">
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">HL7 FHIR R4 Payload</span>
+            <h2 id="fhir-dialog-title" class="dialog-title">Signed Observation Resource</h2>
+          </div>
+          <form method="dialog">
+            <button type="submit" value="close" class="btn-icon-close" aria-label="Close modal">✕</button>
+          </form>
+        </div>
+        <div class="dialog-body">
+          <p class="card-sub">Cryptographically linked to CCE `obligation_audit_logs` sequence.</p>
+          <pre
+            id="fhir-pre"
+            class="code-viewer"
+            role="region"
+            aria-labelledby="fhir-dialog-title"
+            tabindex="0"
+          ><code id="fhir-json-code">{}</code></pre>
+        </div>
+        <div class="dialog-footer">
+          <form method="dialog">
+            <button type="submit" value="close" class="btn btn-primary">Close</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Full Obligation Audit Trail Dialog -->
+    <dialog id="audit-dialog" class="modal-dialog modal-md" closedby="any" aria-labelledby="audit-dialog-title">
+      <div class="dialog-shell">
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">Immutable Audit Chain</span>
+            <h2 id="audit-dialog-title" class="dialog-title">Obligation Audit History</h2>
+          </div>
+          <form method="dialog">
+            <button type="submit" value="close" class="btn-icon-close" aria-label="Close modal">✕</button>
+          </form>
+        </div>
+        <div class="dialog-body" id="audit-dialog-body"></div>
+        <div class="dialog-footer">
+          <form method="dialog">
+            <button type="submit" value="close" class="btn btn-primary">Close</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Accessible Toast Notification Region (popover="manual") -->
+    <div id="toast-region" class="toast-region" role="region" aria-label="Notifications"></div>
+    <div id="toast-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>
